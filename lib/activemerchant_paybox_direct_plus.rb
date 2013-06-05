@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard, options)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_authorization', money, post)
       end
 
@@ -89,6 +90,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard, options)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_purchase', money, post)
       end
 
@@ -98,6 +100,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_reference(post, authorization)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_capture', money, post)
       end
 
@@ -107,6 +110,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_reference(post, authorization)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         post[:porteur] = '000000000000000'
         post[:dateval] = '0000'
         commit('subscriber_void', money, post)
@@ -117,6 +121,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_reference(post, identification)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_credit', money, post)
       end
 
@@ -125,6 +130,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_creditcard(post, creditcard, options)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_create', money, post)
       end
 
@@ -132,6 +138,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_creditcard(post, creditcard, options)
         add_user_reference(post, options)
+        add_credit_card_type(post, options)
         commit('subscriber_update', money, post)
       end
 
@@ -156,14 +163,18 @@ module ActiveMerchant #:nodoc:
         post[:dateval] = expdate(creditcard)
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
       end
-      
+
       def add_user_reference(post, options)
         post[:refabonne] = options[:user_reference]
       end
-      
+
       def add_reference(post, identification)
         post[:numappel] = identification[0,10]
         post[:numtrans] = identification[10,10]
+      end
+
+      def add_credit_card_type(post, options)
+        post[:typecarte] =  '' if options[:typecarte]
       end
 
       def parse(body)
