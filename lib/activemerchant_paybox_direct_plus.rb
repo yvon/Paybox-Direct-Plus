@@ -195,20 +195,19 @@ module ActiveMerchant #:nodoc:
         else
           body.encode!('UTF-8', Encoding::ISO_8859_1)
         end
-        results = {}
-        body.split(/&/).each do |pair|
+
+        body.split(/&/).inject({}) do |results, pair|
           key,val = pair.split(/=/)
           results[key.downcase.to_sym] = CGI.unescape(val) if val
+          results
         end
-        #Rails.logger.info results.inspect
-        results
       end
 
       def commit(action, money = nil, parameters = nil)
         parameters[:montant] = ('0000000000' + (money ? amount(money) : ''))[-10..-1]
         parameters[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
         request_data = post_data(action,parameters)
-        #debugger
+
         response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request_data))
         response = parse(ssl_post(test? ? TEST_URL_BACKUP : LIVE_URL_BACKUP, request_data)) if service_unavailable?(response)
         Response.new(success?(response), message_from(response), response.merge({
@@ -264,13 +263,7 @@ module ActiveMerchant #:nodoc:
           :archivage => parameters[:reference]
         )
 
-        p = parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
-        #Rails.logger.info "\n***************************"
-        #Rails.logger.debug "********** POST DATA IN PAYBOX PLUS ***********"
-        #Rails.logger.debug "*** Parameters for post data:"
-        #Rails.logger.debug "#{p.inspect}"
-        #Rails.logger.info "*****************************"
-        p
+        parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def unique_id(seed = 0)
