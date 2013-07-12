@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
         :subscriber_create => '00056',
         :subscriber_update => '00057',
         :subscriber_destroy => '00058',
+        :transaction_status => '00017'
       }
 
       CURRENCY_CODES = {
@@ -153,6 +154,12 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_user_reference(post, options)
         commit('subscriber_destroy', money, post)
+      end
+
+      def transaction_status(transaction_number)
+        post = { :numtrans => transaction_number }
+        response = commit('transaction_status', nil, post)
+        response.params['status'] if response.params['codereponse'] == '00000'
       end
 
       def test?
