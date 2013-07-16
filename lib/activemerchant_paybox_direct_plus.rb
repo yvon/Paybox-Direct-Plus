@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
         :subscriber_create => '00056',
         :subscriber_update => '00057',
         :subscriber_destroy => '00058',
-        :transaction_status => '00017'
+        :transaction_status => '00017',
+        :transaction_exists => '00011'
       }
 
       CURRENCY_CODES = {
@@ -159,7 +160,13 @@ module ActiveMerchant #:nodoc:
       def transaction_status(transaction_number)
         post = { :numtrans => transaction_number }
         response = commit('transaction_status', nil, post)
-        response.params['status'] if response.params['codereponse'] == '00000'
+        response.params['status'] if response.success?
+      end
+
+      def transaction_number(date, amount, reference)
+        post = { :date => date, :reference => reference }
+        response = commit('transaction_exists', amount, post)
+        response.params['numtrans'] if response.success?
       end
 
       def test?
@@ -261,7 +268,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :version => API_VERSION,
           :type => TRANSACTIONS[action.to_sym],
-          :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
+          :dateq => format_date(parameters.delete(:date) || Time.now),
           :numquestion => unique_id(parameters[:reference]),
           :site => @options[:login].to_s[0,7],
           :rang => @options[:login].to_s[7..-1],
@@ -271,6 +278,10 @@ module ActiveMerchant #:nodoc:
         )
 
         parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
+      end
+
+      def format_date(date)
+        date.strftime('%d%m%Y')
       end
 
       def unique_id(seed = 0)
